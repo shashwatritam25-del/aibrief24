@@ -1,0 +1,38 @@
+name: AI News Aggregator Scraper
+
+on:
+  schedule:
+    # Runs every 4 hours
+    - cron: '0 */4 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  scrape_and_post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r agent/requirements.txt
+
+      - name: Run Scraper and Telegram Bot
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python agent/scraper.py
+          python agent/telegram_bot.py
