@@ -28,7 +28,8 @@ jobs:
       - name: Run Scraper and Telegram Bot
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          # MAP YOUR SECRET TO THE KEY NAME IN YOUR PYTHON CODE
+          # This maps your 'SUPABASE_ANON_KEY' secret to the 'SUPABASE_KEY' 
+          # variable that your Python script is looking for.
           SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }} 
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
