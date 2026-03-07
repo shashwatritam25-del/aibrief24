@@ -28,7 +28,9 @@ jobs:
       - name: Run Scraper and Telegram Bot
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          # This line below is the fix: mapping the environment variable 
+          # to the actual secret name you created in GitHub.
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }} 
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
           JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
