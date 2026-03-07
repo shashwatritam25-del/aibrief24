@@ -28,9 +28,7 @@ jobs:
       - name: Run Scraper and Telegram Bot
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          # This maps your GitHub secret to the SUPABASE_KEY variable 
-          # that line 17 of your scraper.py is looking for.
-          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }} 
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
           JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
