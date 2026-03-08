@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react"; // 1. Added Analytics Import
 import "./globals.css";
 
 const inter = Inter({
@@ -83,6 +84,8 @@ export default function RootLayout({
             </div>
           </footer>
         </div>
+        {/* 2. Added the Analytics component just before the body closes */}
+        <Analytics />
       </body>
     </html>
   );
