@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { HomeFeed } from "@/components/HomeFeed";
 import { Article } from "@/types";
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 0; // Temporarily bypass cache to load new fallback icons
 
 export default async function Home() {
   const { data: rawArticles, error } = await supabase

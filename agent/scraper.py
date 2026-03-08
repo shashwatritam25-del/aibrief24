@@ -16,6 +16,18 @@ TELEGRAM_CHANNEL_ID = os.getenv("TELEGRAM_CHANNEL_ID")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+def get_og_image(url):
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+        res = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, "html.parser")
+        meta_og = soup.find("meta", property="og:image")
+        if meta_og and meta_og.get("content"):
+            return meta_og["content"]
+    except Exception as e:
+        print(f"Error fetching og:image for {url}: {e}")
+    return None
+
 def scrape_huggingface_papers():
     print("Scraping Hugging Face Papers...")
     url = "https://huggingface.co/papers"
@@ -35,13 +47,20 @@ def scrape_huggingface_papers():
                 title = title_elem.text.strip()
                 link = "https://huggingface.co" + link_elem["href"]
                 summary = summary_elem.text.strip() if summary_elem else "A new paper published on Hugging Face."
+                img = article.select_one("img")
+                img_url = get_og_image(link)
+                
+                if not img_url:
+                    if img and "src" in img.attrs:
+                        src = img["src"]
+                        img_url = f"https://huggingface.co{src}" if src.startswith("/") else src
                 
                 articles.append({
                     "title": title,
                     "summary": summary,
                     "category": "Model Updates",
                     "source_url": link,
-                    "image_url": "https://huggingface.co/front/assets/huggingface_logo-noborder.svg" # default hf image
+                    "image_url": img_url
                 })
         return articles
     except Exception as e:
@@ -66,78 +85,101 @@ def scrape_techcrunch_ai():
                 title = title_elem.text.strip()
                 link = title_elem["href"] if title_elem.name == "a" else title_elem.find("a")["href"]
                 summary = summary_elem.text.strip() if summary_elem else "Read the latest AI news on TechCrunch."
+                img = article.select_one("img")
+                img_url = get_og_image(link)
+                
+                if not img_url:
+                    if img and "src" in img.attrs:
+                        img_url = img["src"]
+                    elif img and "srcset" in img.attrs:
+                        img_url = img["srcset"].split()[0]
                 
                 articles.append({
                     "title": title,
                     "summary": summary,
                     "category": "Startup News",
                     "source_url": link,
-                    "image_url": "https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-1.png"
+                    "image_url": img_url
                 })
         return articles
     except Exception as e:
         print(f"Error scraping TechCrunch: {e}")
         return []
 
-from playwright.sync_api import sync_playwright
+import re
 
 def scrape_producthunt_ai():
-    print("Scraping Product Hunt AI with Playwright...")
+    print("Scraping Product Hunt AI via RSS...")
     try:
+        url = "https://www.producthunt.com/feed?category=artificial-intelligence"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "xml")
+        
         articles = []
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page(user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
-            page.goto("https://www.producthunt.com/topics/artificial-intelligence", timeout=15000)
+        for item in soup.find_all("entry")[:3]:
+            title_elem = item.find("title")
+            link_elem = item.find("link")
+            summary_elem = item.find("content")
             
-            # Wait for loaded posts
-            page.wait_for_selector("a[data-test='post-name']", timeout=5000)
-            
-            items = page.locator("a[data-test='post-name']").all()[:3]
-            for item in items:
-                title = item.inner_text().strip()
-                link = "https://www.producthunt.com" + item.get_attribute("href")
-                summary = f"New AI product launch: {title} on Product Hunt."
+            if title_elem and link_elem:
+                title = title_elem.text.strip()
+                link = link_elem["href"]
+                summary = BeautifulSoup(summary_elem.text, "html.parser").text.strip() if summary_elem else f"New AI product launch: {title} on Product Hunt."
+                
+                # Product Hunt blocks fetching og:image and thum.io returns Cloudflare challenges.
+                # Returning None ensures the frontend uses the clean, dynamic `<TrendingUp/>` fallback icon.
+                img_url = None
                 
                 articles.append({
                     "title": title,
-                    "summary": summary,
+                    "summary": summary[:200] + "..." if len(summary) > 200 else summary,
                     "category": "New AI Tools",
                     "source_url": link,
-                    "image_url": "https://ph-static.imgix.net/ph-logo-1.png"
+                    "image_url": img_url
                 })
-            browser.close()
         return articles
     except Exception as e:
         print(f"Error scraping Product Hunt: {e}")
         return []
 
+import html
+import json
+
 def scrape_yc_launches():
-    print("Scraping YC Launches with Playwright as fallback...")
+    print("Scraping YC Launches via embedded JSON...")
     try:
+        url = "https://www.ycombinator.com/launches"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
         articles = []
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page(user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
-            page.goto("https://www.ycombinator.com/launches", timeout=15000)
-            
-            # Wait for loaded titles
-            page.wait_for_selector(".launch-title", timeout=5000)
-            
-            items = page.locator("a.launch-title").all()[:3]
-            for item in items:
-                title = item.inner_text().strip()
-                link = "https://www.ycombinator.com" + item.get_attribute("href")
-                summary = "A new product launched by Y Combinator."
-                
-                articles.append({
-                    "title": title,
-                    "summary": summary,
-                    "category": "SaaS Launches",
-                    "source_url": link,
-                    "image_url": "https://news.ycombinator.com/y18.svg"
-                })
-            browser.close()
+        for line in response.text.split('\n'):
+            if "total_vote_count" in line:
+                extracted = re.findall(r'(\[{"id":\d+,"title":.*?}\])', line)
+                if extracted:
+                    js = json.loads(extracted[0])
+                    for item in js[:3]:
+                        title = item.get("title", "")
+                        tagline = item.get("tagline", "")
+                        link = item.get("search_path", "")
+                        if not link.startswith("http"):
+                            link = "https://www.ycombinator.com" + link
+                        summary = tagline if tagline else "A new product launched by Y Combinator."
+                        
+                        img_url = get_og_image(link)
+                        
+                        articles.append({
+                            "title": title,
+                            "summary": summary,
+                            "category": "SaaS Launches",
+                            "source_url": link,
+                            "image_url": img_url
+                        })
+                    break # Only parse the first matching chunk
+                    
         return articles
     except Exception as e:
         print(f"Error scraping YC: {e}")
@@ -147,19 +189,26 @@ def scrape_yc_launches():
 def save_to_supabase(articles):
     print(f"Saving {len(articles)} articles to Supabase...")
     saved_count = 0
+    updated_count = 0
     for article in articles:
         try:
             # Check if it already exists to avoid unique constraint errors
-            existing = supabase.table("news_items").select("id").eq("source_url", article["source_url"]).execute()
+            existing = supabase.table("news_items").select("id, image_url").eq("source_url", article["source_url"]).execute()
             if not existing.data:
                 supabase.table("news_items").insert(article).execute()
                 saved_count += 1
                 print(f"Saved: {article['title']}")
             else:
-                print(f"Skipped (already exists): {article['title']}")
+                if not existing.data[0].get("image_url") and article.get("image_url"):
+                    supabase.table("news_items").update({"image_url": article["image_url"]}).eq("id", existing.data[0]["id"]).execute()
+                    updated_count += 1
+                    print(f"Updated Image: {article['title']}")
+                else:
+                    print(f"Skipped (already exists): {article['title']}")
         except Exception as e:
-            print(f"Error inserting {article['title']}: {e}")
+            print(f"Error inserting/updating {article['title']}: {e}")
     print(f"Total newly saved articles: {saved_count}")
+    print(f"Total backfilled images: {updated_count}")
 
 def main():
     print("Starting AIBrief24 Scraper...")
