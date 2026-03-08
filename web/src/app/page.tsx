@@ -38,8 +38,28 @@ export default async function Home() {
     };
   });
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "AI Brief 24",
+    "url": "https://aibrief24.com",
+    "description": "Curated, real-time intelligence on Artificial Intelligence, Machine Learning, and Robotics.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "AI Brief 24",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://aibrief24.com/android-chrome-512x512.png"
+      }
+    }
+  };
+
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <HomeFeed initialArticles={articles} />
     </main>
   );

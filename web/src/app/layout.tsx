@@ -9,7 +9,33 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "AI Brief 24 | The Bleeding Edge of AI",
-  description: "Curated, real-time intelligence on Artificial Intelligence, Machine Learning, and Robotics.",
+  description: "Curated, real-time intelligence on Artificial Intelligence, Machine Learning, and Robotics. Stay ahead of the curve.",
+  keywords: [
+    "AI news",
+    "artificial intelligence",
+    "machine learning",
+    "AI tools",
+    "SaaS launches",
+    "startups",
+    "TechCrunch AI",
+    "Y Combinator startups",
+    "Hugging Face models",
+    "Product Hunt tools",
+    "robotics"
+  ],
+  authors: [{ name: "AI Brief 24" }],
+  openGraph: {
+    title: "AI Brief 24 | The Bleeding Edge of AI",
+    description: "Curated, real-time intelligence on Artificial Intelligence, Machine Learning, and Robotics.",
+    url: "https://aibrief24.com",
+    siteName: "AI Brief 24",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Brief 24 | The Bleeding Edge of AI",
+    description: "Curated, real-time intelligence on Artificial Intelligence, Machine Learning, and Robotics.",
+  },
 };
 
 export default function RootLayout({
