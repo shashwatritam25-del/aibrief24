@@ -78,9 +78,12 @@ export default function RootLayout({
           </div>
 
           <footer className="border-t border-white/5 py-12 mt-20 bg-black/40 backdrop-blur-md">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-white/40 font-medium">
-              <p>&copy; {new Date().getFullYear()} AI Brief 24. All rights reserved.</p>
-              <p className="mt-2 text-white/30">Automated intelligence gathering for the future.</p>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-white/40 font-medium flex flex-col items-center justify-center gap-4">
+              <div>
+                <p>&copy; {new Date().getFullYear()} AI Brief 24. All rights reserved.</p>
+                <p className="mt-2 text-white/30">Automated intelligence gathering for the future.</p>
+              </div>
+              <a href="/privacy" className="text-white/40 hover:text-white/70 transition-colors">Privacy Policy</a>
             </div>
           </footer>
         </div>

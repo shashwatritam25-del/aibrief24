@@ -10,11 +10,11 @@ from datetime import datetime
 load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHANNEL_ID = os.getenv("TELEGRAM_CHANNEL_ID")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 def get_og_image(url):
     try:
@@ -169,7 +169,9 @@ def scrape_yc_launches():
                             link = "https://www.ycombinator.com" + link
                         summary = tagline if tagline else "A new product launched by Y Combinator."
                         
-                        img_url = get_og_image(link)
+                        img_url = item.get("company", {}).get("logo", None)
+                        if not img_url:
+                            img_url = get_og_image(link)
                         
                         articles.append({
                             "title": title,
